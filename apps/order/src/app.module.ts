@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import * as Joi from 'joi';
 import { OrderModule } from './order/order.module';
 import { MongooseModule } from '@nestjs/mongoose';
