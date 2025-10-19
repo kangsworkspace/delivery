@@ -20,4 +20,4 @@ RUN pnpm i
 COPY . .
 
 # 애플리케이션 실행
-CMD ["pnpm", "start:dev", "user"]
+CMD ["pnpm", "start:dev", "product"]

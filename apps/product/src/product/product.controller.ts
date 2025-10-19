@@ -8,7 +8,7 @@ import { RpcInterceptor } from '@app/common/interceptor/rpc.interceptor';
 export class ProductController {
   constructor(private readonly productService: ProductService) {}
 
-  @Post('sample')
+  @MessagePattern({cmd: 'create_samples'})
   createSamples(){
     return this.productService.createSamples();
   }
