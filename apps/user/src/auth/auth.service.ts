@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { UserService } from '../user/user.service';
 import { RegisterDto } from './dto/register-dto';
 import { Repository } from 'typeorm';
@@ -101,5 +101,51 @@ export class AuthService {
         const [email, password] = tokenSplit;
 
         return { email, password };
+    }
+
+    async parseBearerToken(rawToken: string, isRefreshToken: boolean){
+        console.log('parseBearerToken called with:', { rawToken, isRefreshToken });
+        
+        if (!rawToken) {
+            throw new BadRequestException('토큰이 없습니다!');
+        }
+
+        const basicSplit = rawToken.split(' ');
+
+        if(basicSplit.length !== 2){
+            throw new BadRequestException('토큰 포맷이 잘못되었습니다!');
+        }
+
+        const [basic, token] = basicSplit;
+
+        if(basic.toLowerCase() !== 'bearer'){
+            throw new BadRequestException('토큰 포맷이 잘못되었습니다!');
+        }
+
+        try {
+            const payload = await this.jwtService.verifyAsync(
+                token,
+                {
+                    secret: this.configService.getOrThrow(
+                        isRefreshToken ? 'REFRESH_TOKEN_SECRET' : 'ACCESS_TOKEN_SECRET'
+                    )
+                }
+            )
+
+            if(isRefreshToken) {
+                if(payload.type !== 'refresh'){
+                    throw new BadRequestException('Refresh 토큰을 입력해주세요!');
+                }
+            } else {
+                if(payload.type !== 'access'){
+                    throw new BadRequestException('Access 토큰을 입력해주세요!');
+                }
+            }
+
+            return payload;
+        } catch (error) {
+            console.error('JWT verification error:', error);
+            throw new UnauthorizedException('토큰이 만료됐습니다!');
+        }
     }
 }

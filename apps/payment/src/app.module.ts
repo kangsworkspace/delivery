@@ -3,6 +3,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import * as Joi from 'joi'
 import { PaymentModule } from './payment/payment.module';
+import { ClientsModule, Transport } from '@nestjs/microservices';
+import { NOTIFICATION_SERVICE } from '@app/common';
 
 @Module({
     imports: [
@@ -20,6 +22,22 @@ import { PaymentModule } from './payment/payment.module';
                 synchronize: true, // 개발 환경에서 스키마를 자동으로 동기화 (프로덕션에서는 false 권장)
             }),
             inject: [ConfigService]
+        }),
+        ClientsModule.registerAsync({
+            clients: [
+              { 
+                name: NOTIFICATION_SERVICE,
+                useFactory: (configService: ConfigService) => ({
+                  transport: Transport.TCP,
+                  options: {
+                    host: configService.getOrThrow('NOTIFICATION_HOST'),
+                    port: configService.getOrThrow('NOTIFICATION_TCP_PORT'),
+                  },
+                }),
+                inject: [ConfigService]
+              }
+            ],
+            isGlobal: true,
         }),
         PaymentModule,
     ],

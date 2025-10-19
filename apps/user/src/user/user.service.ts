@@ -15,6 +15,16 @@ export class UserService {
     private readonly configService: ConfigService
   ){}
 
+  async getUserById(userId: string){
+    const user = await this.userRepository.findOneBy({id: userId});
+
+    if(!user){
+      throw new BadRequestException('사용자를 찾을 수 없습니다.');
+    }
+
+    return user;
+  }
+
   async create(createUserDto: CreateUserDto){
     const { email, password } = createUserDto;
 
