@@ -6,12 +6,22 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   app.connectMicroservice<MicroserviceOptions>({
-    // Redis 방식으로 연결
-    transport: Transport.REDIS,
+    // RabbitMQ 방식으로 연결
+    transport: Transport.RMQ,
     options: {
-        host: 'redis',
-        port: 6379,
+        urls: ['amqp://rabbitmq:5672'],
+        queue: 'notification_queue',
+        queueOptions: {
+            durable: false,
+        }
     }
+
+    // Redis 방식으로 연결
+    // transport: Transport.REDIS,
+    // options: {
+    //     host: 'redis',
+    //     port: 6379,
+    // }
 
     // TCP 방식으로 연결
     // transport: Transport.TCP,
