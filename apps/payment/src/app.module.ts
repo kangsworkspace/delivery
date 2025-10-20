@@ -28,11 +28,19 @@ import { NOTIFICATION_SERVICE } from '@app/common';
               { 
                 name: NOTIFICATION_SERVICE,
                 useFactory: (configService: ConfigService) => ({
-                  transport: Transport.TCP,
+                  // Redis 방식으로 연결
+                  transport: Transport.REDIS,
                   options: {
-                    host: configService.getOrThrow('NOTIFICATION_HOST'),
-                    port: configService.getOrThrow('NOTIFICATION_TCP_PORT'),
-                  },
+                      host: 'redis',
+                      port: 6379,
+                  }
+
+                  // TCP 방식으로 연결 
+                  // transport: Transport.TCP,
+                  // options: {
+                  //   host: configService.getOrThrow('NOTIFICATION_HOST'),
+                  //   port: configService.getOrThrow('NOTIFICATION_TCP_PORT'),
+                  // },
                 }),
                 inject: [ConfigService]
               }

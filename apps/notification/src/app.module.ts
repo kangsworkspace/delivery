@@ -25,11 +25,19 @@ import { ORDER_SERVICE } from "@app/common";
           { 
             name: ORDER_SERVICE,
             useFactory: (configService: ConfigService) => ({
-              transport: Transport.TCP,
+              // Redis 방식으로 연결
+              transport: Transport.REDIS,
               options: {
-                host: configService.getOrThrow('ORDER_HOST'),
-                port: configService.getOrThrow('ORDER_TCP_PORT'),
-              },
+                  host: 'redis',
+                  port: 6379,
+              }
+
+              // TCP 방식으로 연결
+              // transport: Transport.TCP,
+              // options: {
+              //   host: configService.getOrThrow('ORDER_HOST'),
+              //   port: configService.getOrThrow('ORDER_TCP_PORT'),
+              // },
             }),
             inject: [ConfigService]
           }

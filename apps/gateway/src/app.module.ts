@@ -26,33 +26,57 @@ import { BearerTokenMiddleware } from "./auth/middleware/bearer-token.middleware
                 {
                     name: USER_SERVICE,
                     useFactory: (configService: ConfigService) => ({
-                        transport: Transport.TCP,
+                        // Redis 방식으로 연결
+                        transport: Transport.REDIS,
                         options: {
-                            host: configService.getOrThrow('USER_HOST'),
-                            port: configService.getOrThrow('USER_TCP_PORT'),
+                            host: 'redis',
+                            port: 6379,
                         }
+
+                        // TCP 방식으로 연결
+                        // transport: Transport.TCP,
+                        // options: {
+                        //     host: configService.getOrThrow('USER_HOST'),
+                        //     port: configService.getOrThrow('USER_TCP_PORT'),
+                        // }
                     }),
                     inject: [ConfigService]
                 },
                 {
                     name: PRODUCT_SERVICE,
                     useFactory: (configService: ConfigService) => ({
-                        transport: Transport.TCP,
+                        // Redis 방식으로 연결
+                        transport: Transport.REDIS,
                         options: {
-                            host: configService.getOrThrow('PRODUCT_HOST'),
-                            port: configService.getOrThrow('PRODUCT_TCP_PORT'),
+                            host: 'redis',
+                            port: 6379,
                         }
+
+                        // TCP 방식으로 연결
+                        // transport: Transport.TCP,
+                        // options: {
+                        //     host: configService.getOrThrow('PRODUCT_HOST'),
+                        //     port: configService.getOrThrow('PRODUCT_TCP_PORT'),
+                        // }
                     }),
                     inject: [ConfigService]
                 },
                 {
                     name: ORDER_SERVICE,
                     useFactory: (configService: ConfigService) => ({
-                        transport: Transport.TCP,
+                        // Redis 방식으로 연결
+                        transport: Transport.REDIS,
                         options: {
-                            host: configService.getOrThrow('ORDER_HOST'),
-                            port: configService.getOrThrow('ORDER_TCP_PORT'),
+                            host: 'redis',
+                            port: 6379,
                         }
+
+                        // TCP 방식으로 연결
+                        // transport: Transport.TCP,
+                        // options: {
+                        //     host: configService.getOrThrow('ORDER_HOST'),
+                        //     port: configService.getOrThrow('ORDER_TCP_PORT'),
+                        // }
                     }),
                     inject: [ConfigService]
                 },

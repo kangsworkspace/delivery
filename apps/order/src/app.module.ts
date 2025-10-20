@@ -32,11 +32,19 @@ import { PAYMENT_SERVICE, PRODUCT_SERVICE, USER_SERVICE } from '@app/common';
         { 
           name: USER_SERVICE,
           useFactory: (configService: ConfigService) => ({
-            transport: Transport.TCP,
+            // Redis 방식으로 연결
+            transport: Transport.REDIS,
             options: {
-              host: configService.getOrThrow('USER_HOST'),
-              port: configService.getOrThrow('USER_TCP_PORT'),
-            },
+                host: 'redis',
+                port: 6379,
+            }
+
+            // TCP 방식으로 연결
+            // transport: Transport.TCP,
+            // options: {
+            //   host: configService.getOrThrow('USER_HOST'),
+            //   port: configService.getOrThrow('USER_TCP_PORT'),
+            // },
           }),
           inject: [ConfigService]
         }
@@ -48,11 +56,19 @@ import { PAYMENT_SERVICE, PRODUCT_SERVICE, USER_SERVICE } from '@app/common';
         { 
           name: PRODUCT_SERVICE,
           useFactory: (configService: ConfigService) => ({
-            transport: Transport.TCP,
+            // Redis 방식으로 연결
+            transport: Transport.REDIS,
             options: {
-              host: configService.getOrThrow('PRODUCT_HOST'),
-              port: configService.getOrThrow('PRODUCT_TCP_PORT'),
-            },
+                host: 'redis',
+                port: 6379,
+            }
+
+            // TCP 방식으로 연결
+            // transport: Transport.TCP,
+            // options: {
+            //   host: configService.getOrThrow('PRODUCT_HOST'),
+            //   port: configService.getOrThrow('PRODUCT_TCP_PORT'),
+            // },
           }),
           inject: [ConfigService]
         }
@@ -64,11 +80,19 @@ import { PAYMENT_SERVICE, PRODUCT_SERVICE, USER_SERVICE } from '@app/common';
         { 
           name: PAYMENT_SERVICE,
           useFactory: (configService: ConfigService) => ({
-            transport: Transport.TCP,
+            // Redis 방식으로 연결
+            transport: Transport.REDIS,
             options: {
-              host: configService.getOrThrow('PAYMENT_HOST'),
-              port: configService.getOrThrow('PAYMENT_TCP_PORT'),
-            },
+                host: 'redis',
+                port: 6379,
+            }
+
+            // TCP 방식으로 연결
+            // transport: Transport.TCP,
+            // options: {
+            //   host: configService.getOrThrow('PAYMENT_HOST'),
+            //   port: configService.getOrThrow('PAYMENT_TCP_PORT'),
+            // },
           }),
           inject: [ConfigService]
         }
