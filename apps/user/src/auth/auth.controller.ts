@@ -6,25 +6,31 @@ import { MessagePattern, Payload, RpcException } from '@nestjs/microservices';
 import { ParseBearerTokenDto } from './dto/parse-bearer-dto';
 import { RpcInterceptor } from '@app/common/interceptor/rpc.interceptor';
 import { LoginDto } from './dto/login.dto';
+import { UserMicroservice } from '@app/common';
 
 @Controller('auth')
-export class AuthController {
+export class AuthController implements UserMicroservice.AuthServiceController {
   constructor(private readonly authService: AuthService) {}
 
-  @MessagePattern({cmd: 'register'})
-  registerUser(@Payload() registerDto: RegisterDto) {
-    const { token } = registerDto;
+  // GRPC 방식으로 연결
+  async registerUser(request: UserMicroservice.RegisterUserRequest) {
+    const { token } = request;
 
     if (token === null) {
       throw new UnauthorizedException('토큰을 입력해주세요!');
     }
 
-    return this.authService.register(token, registerDto);
+    const user = await this.authService.register(token, request);
+  
+    if (!user) {
+      throw new RpcException('사용자 생성에 실패했습니다.');
+    }
+
+    return user;
   }
 
-  @MessagePattern({cmd: 'login'})
-  loginUser(@Payload() loginDto: LoginDto) {
-    const { token } = loginDto;
+  loginUser(request: UserMicroservice.LoginUserRequest) {
+    const { token } = request;
 
     if (token === null) {
       throw new UnauthorizedException('토큰을 입력해주세요!');
@@ -32,6 +38,19 @@ export class AuthController {
 
     return this.authService.login(token);
   }
+
+  parseBearerToken(request: UserMicroservice.ParseBearerTokenRequest) {
+    return this.authService.parseBearerToken(request.token, false);
+  }
+
+  // @MessagePattern({
+  //   cmd: 'parse_bearer_token'
+  // })
+  // @UsePipes(ValidationPipe)
+  // @UseInterceptors(RpcInterceptor)
+  // parseBearerToken(@Payload() payload: ParseBearerTokenDto) {
+  //   return this.authService.parseBearerToken(payload.token, false);
+  // }
 
   // @Post('register')
   // @UsePipes(ValidationPipe)
@@ -52,13 +71,4 @@ export class AuthController {
 
   //   return this.authService.login(token);
   // }
-
-  @MessagePattern({
-    cmd: 'parse_bearer_token'
-  })
-  @UsePipes(ValidationPipe)
-  @UseInterceptors(RpcInterceptor)
-  parseBearerToken(@Payload() payload: ParseBearerTokenDto) {
-    return this.authService.parseBearerToken(payload.token, false);
-  }
 }

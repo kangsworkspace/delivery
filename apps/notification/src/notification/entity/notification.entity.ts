@@ -21,6 +21,11 @@ export class Notification extends Document {
     @Prop({
         required: true,
     })
+    subject: string;
+
+    @Prop({
+        required: true,
+    })
     content: string;
 
     @Prop({

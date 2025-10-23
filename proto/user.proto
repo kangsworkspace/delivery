@@ -4,7 +4,7 @@ package user;
 
 service AuthService {
     rpc ParseBearerToken(ParseBearerTokenRequest) returns (ParseBearerTokenResponse);
-    rpc ReisterUser(ReisterUserRequest) returns (ReisterUserResponse);
+    rpc RegisterUser(RegisterUserRequest) returns (RegisterUserResponse);
     rpc LoginUser(LoginUserRequest) returns (LoginUserResponse);
 }
 
@@ -16,14 +16,14 @@ message ParseBearerTokenResponse {
     string sub = 1;
 }
 
-message ReisterUserRequest {
+message RegisterUserRequest {
     string token = 1;
     string name = 2;
     int32 age = 3;
-    string profile = 4;
+    string profile = 4; 
 }
 
-message ReisterUserResponse {
+message RegisterUserResponse {
     string id = 1;
     string email = 2;
     string name = 3;

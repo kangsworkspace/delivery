@@ -4,7 +4,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import * as Joi from 'joi'
 import { PaymentModule } from './payment/payment.module';
 import { ClientsModule, Transport } from '@nestjs/microservices';
-import { NOTIFICATION_SERVICE } from '@app/common';
+import { NOTIFICATION_SERVICE, NotificationMicroservice } from '@app/common';
+import { join } from 'path';
 
 @Module({
     imports: [
@@ -23,37 +24,46 @@ import { NOTIFICATION_SERVICE } from '@app/common';
             }),
             inject: [ConfigService]
         }),
+        // 
         ClientsModule.registerAsync({
             clients: [
-              { 
-                name: NOTIFICATION_SERVICE,
-                useFactory: (configService: ConfigService) => ({
-                  // RabbitMQ 방식으로 연결
-                  transport: Transport.RMQ,
-                  options: {
-                      urls: ['amqp://rabbitmq:5672'],
-                      queue: 'notification_queue',
-                      queueOptions: {
-                          durable: false,
-                      }
-                  }
+                {
+                    name: NOTIFICATION_SERVICE,
+                    useFactory: (configService: ConfigService) => ({
+                        // GRPC 방식으로 연결
+                        transport: Transport.GRPC,
+                        options: {
+                            package: NotificationMicroservice.protobufPackage,
+                            protoPath: join(process.cwd(), 'proto/notification.proto'),
+                            url: configService.getOrThrow('NOTIFICATION_GRPC_URL'),
+                        },
 
-                  // Redis 방식으로 연결
-                  // transport: Transport.REDIS,
-                  // options: {
-                  //     host: 'redis',
-                  //     port: 6379,
-                  // }
+                        // RabbitMQ 방식으로 연결
+                        //   transport: Transport.RMQ,
+                        //   options: {
+                        //       urls: ['amqp://rabbitmq:5672'],
+                        //       queue: 'notification_queue',
+                        //       queueOptions: {
+                        //           durable: false,
+                        //       }
+                        //   }
 
-                  // TCP 방식으로 연결 
-                  // transport: Transport.TCP,
-                  // options: {
-                  //   host: configService.getOrThrow('NOTIFICATION_HOST'),
-                  //   port: configService.getOrThrow('NOTIFICATION_TCP_PORT'),
-                  // },
-                }),
-                inject: [ConfigService]
-              }
+                        // Redis 방식으로 연결
+                        // transport: Transport.REDIS,
+                        // options: {
+                        //     host: 'redis',
+                        //     port: 6379,
+                        // }
+
+                        // TCP 방식으로 연결 
+                        // transport: Transport.TCP,
+                        // options: {
+                        //   host: configService.getOrThrow('NOTIFICATION_HOST'),
+                        //   port: configService.getOrThrow('NOTIFICATION_TCP_PORT'),
+                        // },
+                    }),
+                    inject: [ConfigService]
+                }
             ],
             isGlobal: true,
         }),

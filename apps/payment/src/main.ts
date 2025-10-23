@@ -1,20 +1,32 @@
 import { NestFactory } from '@nestjs/core';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { AppModule } from './app.module';
+import { ConfigService } from '@nestjs/config';
+import { PaymentMicroservice } from '@app/common';
+import { join } from 'path';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  const configService = app.get(ConfigService)
 
   app.connectMicroservice<MicroserviceOptions>({
-    // RabbitMQ 방식으로 연결
-    transport: Transport.RMQ,
+    // GRPC 방식으로 연결
+    transport: Transport.GRPC,
     options: {
-        urls: ['amqp://rabbitmq:5672'],
-        queue: 'payment_queue',
-        queueOptions: {
-            durable: false,
-        }
-    }
+      package: PaymentMicroservice.protobufPackage,
+      protoPath: join(process.cwd(), 'proto/payment.proto'),
+      url: configService.getOrThrow('GRPC_URL'),
+    },
+
+    // RabbitMQ 방식으로 연결
+    // transport: Transport.RMQ,
+    // options: {
+    //     urls: ['amqp://rabbitmq:5672'],
+    //     queue: 'payment_queue',
+    //     queueOptions: {
+    //         durable: false,
+    //     }
+    // }
 
     // Redis 방식으로 연결
     // transport: Transport.REDIS,
