@@ -1,20 +1,32 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { SendPaymentNotificationDto } from './dto/send-payment-notification.dto';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { Notification, NotificationStatus } from './entity/notification.entity';
-import { ORDER_SERVICE } from '@app/common';
-import { ClientProxy } from '@nestjs/microservices';
+import { ORDER_SERVICE, OrderMicroservice } from '@app/common';
+import { ClientGrpc, ClientProxy } from '@nestjs/microservices';
 
 @Injectable()
-export class NotificationService {
+export class NotificationService implements OnModuleInit {
+  orderService: OrderMicroservice.OrderServiceClient;
+
   constructor(
     @InjectModel(Notification.name)
     private readonly notificationModel: Model<Notification>,
 
+    // GRPC 방식으로 연결
     @Inject(ORDER_SERVICE)
-    private readonly orderService: ClientProxy,
+    private readonly orderMicroservice: ClientGrpc,
+
+    // RabbitMQ 방식으로 연결
+    // @Inject(ORDER_SERVICE)
+    // private readonly orderService: ClientProxy,
   ){}
+  onModuleInit() {
+    this.orderService = this.orderMicroservice.getService<OrderMicroservice.OrderServiceClient>(
+      'OrderService',
+    );
+  }
 
 
   async sendPaymentNotification(data: SendPaymentNotificationDto){
@@ -31,10 +43,15 @@ export class NotificationService {
   }
 
   private sendDeliveryStartedMessage(id: string){
-    return this.orderService.emit(
-      { cmd: 'delivery_started'},
-      { id },
-    )
+    // GRPC 방식으로 연결
+    return this.orderService.deliveryStarted({
+      id,
+    });
+    
+    // return this.orderService.emit(
+    //   { cmd: 'delivery_started'},
+    //   { id },
+    // )
   }
 
   private async updateNotificationStatus(id: string, status: NotificationStatus){

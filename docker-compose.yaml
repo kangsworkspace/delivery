@@ -177,5 +177,7 @@ services:
   # redis:
   #   image: redis:7
 
-  rabbitmq:
-    image: rabbitmq:4
+  # rabbitmq:
+  #   image: rabbitmq:4
+
+  
