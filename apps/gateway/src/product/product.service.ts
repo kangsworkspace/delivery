@@ -1,4 +1,4 @@
-import { PRODUCT_SERVICE, ProductMicroservice } from '@app/common';
+import { constructMetadata, PRODUCT_SERVICE, ProductMicroservice } from '@app/common';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { ClientGrpc, ClientProxy } from '@nestjs/microservices';
 import { lastValueFrom } from 'rxjs';
@@ -22,7 +22,7 @@ export class ProductService implements OnModuleInit{
     }
 
     async createSamples(){
-        return this.productService.createSamples({});
+        return this.productService.createSamples({}, constructMetadata(ProductService.name, 'createSamples'));
 
         // return lastValueFrom(this.productMicroservice.send(
         //     { cmd: 'create_samples' },

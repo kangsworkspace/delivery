@@ -6,10 +6,12 @@ import { MessagePattern, Payload, RpcException } from '@nestjs/microservices';
 import { ParseBearerTokenDto } from './dto/parse-bearer-dto';
 import { RpcInterceptor } from '@app/common/interceptor/rpc.interceptor';
 import { LoginDto } from './dto/login.dto';
-import { UserMicroservice } from '@app/common';
+import { GrpcInterceptor, UserMicroservice } from '@app/common';
+import { Metadata } from '@grpc/grpc-js';
 
 @Controller('auth')
 @UserMicroservice.AuthServiceControllerMethods()
+@UseInterceptors(GrpcInterceptor)
 export class AuthController implements UserMicroservice.AuthServiceController {
   constructor(private readonly authService: AuthService) {}
 
@@ -30,7 +32,7 @@ export class AuthController implements UserMicroservice.AuthServiceController {
     return user;
   }
 
-  loginUser(request: UserMicroservice.LoginUserRequest) {
+  loginUser(request: UserMicroservice.LoginUserRequest, metadata: Metadata) {
     const { token } = request;
 
     if (token === null) {

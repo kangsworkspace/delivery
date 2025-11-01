@@ -4,7 +4,7 @@ import * as Joi from 'joi';
 import { OrderModule } from './order/order.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ClientsModule, Transport } from '@nestjs/microservices';
-import { PAYMENT_SERVICE, PaymentMicroservice, PRODUCT_SERVICE, ProductMicroservice, USER_SERVICE, UserMicroservice } from '@app/common';
+import { PAYMENT_SERVICE, PaymentMicroservice, PRODUCT_SERVICE, ProductMicroservice, traceInterceptor, USER_SERVICE, UserMicroservice } from '@app/common';
 import { join } from 'path';
 
 @Module({
@@ -36,6 +36,9 @@ import { join } from 'path';
             // GRPC 방식으로 연결
             transport: Transport.GRPC,
             options: {
+              channelOptions: {
+                interceptors: [traceInterceptor('Order')]
+              },
               package: UserMicroservice.protobufPackage,
               protoPath: join(process.cwd(), 'proto/user.proto'),
               url: configService.getOrThrow('USER_GRPC_URL'),
@@ -78,6 +81,9 @@ import { join } from 'path';
             // GRPC 방식으로 연결
             transport: Transport.GRPC,
             options: {
+              channelOptions: {
+                interceptors: [traceInterceptor('Order')]
+              },
               package: ProductMicroservice.protobufPackage,
               protoPath: join(process.cwd(), 'proto/product.proto'),
               url: configService.getOrThrow('PRODUCT_GRPC_URL'),
@@ -120,6 +126,9 @@ import { join } from 'path';
             // GRPC 방식으로 연결
             transport: Transport.GRPC,
             options: {
+              channelOptions: {
+                interceptors: [traceInterceptor('Order')]
+              },
               package: PaymentMicroservice.protobufPackage,
               protoPath: join(process.cwd(), 'proto/payment.proto'),
               url: configService.getOrThrow('PAYMENT_GRPC_URL'),

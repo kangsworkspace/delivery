@@ -3,8 +3,9 @@ import { SendPaymentNotificationDto } from './dto/send-payment-notification.dto'
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { Notification, NotificationStatus } from './entity/notification.entity';
-import { ORDER_SERVICE, OrderMicroservice } from '@app/common';
+import { constructMetadata, ORDER_SERVICE, OrderMicroservice } from '@app/common';
 import { ClientGrpc, ClientProxy } from '@nestjs/microservices';
+import { Metadata } from '@grpc/grpc-js';
 
 @Injectable()
 export class NotificationService implements OnModuleInit {
@@ -29,7 +30,7 @@ export class NotificationService implements OnModuleInit {
   }
 
 
-  async sendPaymentNotification(data: SendPaymentNotificationDto){
+  async sendPaymentNotification(data: SendPaymentNotificationDto, metadata: Metadata){
     const notification = await this.createNotification(data.to);
 
     await this.sendEmail();
@@ -37,16 +38,16 @@ export class NotificationService implements OnModuleInit {
     await this.updateNotificationStatus(notification.id, NotificationStatus.sent);
   
     /// Cold observable vs Hot observable
-    this.sendDeliveryStartedMessage(data.orderId);
+    this.sendDeliveryStartedMessage(data.orderId, metadata);
 
     return this.notificationModel.findById(notification.id);
   }
 
-  private sendDeliveryStartedMessage(id: string){
+  private sendDeliveryStartedMessage(id: string, metadata: Metadata){
     // GRPC 방식으로 연결
     return this.orderService.deliveryStarted({
       id,
-    });
+    }, constructMetadata(NotificationService.name, 'sendDeliveryStartedMessage', metadata));
     
     // return this.orderService.emit(
     //   { cmd: 'delivery_started'},

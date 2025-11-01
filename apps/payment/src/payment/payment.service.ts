@@ -3,9 +3,10 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Payment, PaymentStatus } from '../entity/payment.entity';
 import { Repository } from 'typeorm';
 import { MakePaymentDto } from '../dto/make-payment.dto';
-import { NOTIFICATION_SERVICE, NotificationMicroservice } from '@app/common';
+import { constructMetadata, NOTIFICATION_SERVICE, NotificationMicroservice } from '@app/common';
 import { ClientGrpc, ClientProxy } from '@nestjs/microservices';
 import { lastValueFrom } from 'rxjs';
+import { Metadata } from '@grpc/grpc-js';
 
 @Injectable()
 export class PaymentService implements OnModuleInit{
@@ -31,7 +32,7 @@ export class PaymentService implements OnModuleInit{
   }
 
 
-  async makePayment(payload: MakePaymentDto) {
+  async makePayment(payload: MakePaymentDto, metadata: Metadata) {
     let paymentId: string = '';
 
     try {
@@ -43,7 +44,7 @@ export class PaymentService implements OnModuleInit{
       await this.updatePaymentStatus(result.id, PaymentStatus.approved);
 
       /// TODO: notification 보내기
-      this.sendNotification(payload.orderId, payload.userEmail);
+      this.sendNotification(payload.orderId, payload.userEmail, metadata);
 
       return await this.paymentRepository.findOneBy({ id: result.id })
       
@@ -65,12 +66,12 @@ export class PaymentService implements OnModuleInit{
     );
   }
 
-  async sendNotification(orderId: string, to: string){
+  async sendNotification(orderId: string, to: string, metadata: Metadata){
     // GRPC 방식으로 연결
     const resp = await lastValueFrom(this.notificationService.sendPaymentNotification({
       to,
       orderId
-    }));
+    }, constructMetadata(PaymentService.name, 'sendNotification', metadata)));
 
     // const resp = await lastValueFrom(this.notificationService.send(
     //   { cmd: 'send_payment_notification' },

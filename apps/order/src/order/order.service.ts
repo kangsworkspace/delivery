@@ -2,7 +2,7 @@ import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { ClientGrpc, ClientProxy } from '@nestjs/microservices';
 import { lastValueFrom } from 'rxjs';
-import { PAYMENT_SERVICE, PaymentMicroservice, PRODUCT_SERVICE, ProductMicroservice, USER_SERVICE, UserMicroservice } from '@app/common';
+import { constructMetadata, PAYMENT_SERVICE, PaymentMicroservice, PRODUCT_SERVICE, ProductMicroservice, USER_SERVICE, UserMicroservice } from '@app/common';
 import { PaymentCancelledException } from './exception/payment-cancelled.exception';
 import { Product } from './entity/product.entity';
 import { AddressDto } from './dto/address.dto';
@@ -12,6 +12,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { PaymentDto } from './dto/payment.dto';
 import { PaymentFailedException } from './exception/payment-failed-exception';
+import { Metadata } from '@grpc/grpc-js';
 
 @Injectable()
 export class OrderService implements OnModuleInit{
@@ -54,15 +55,15 @@ export class OrderService implements OnModuleInit{
     );
   }
 
-  async createOrder(createOrderDto: CreateOrderDto) {
+  async createOrder(createOrderDto: CreateOrderDto, metadata: Metadata) {
     try {
       const { productIds, address, payment, meta } = createOrderDto;
 
       /// 1) 사용자 정보 가져오기
-      const user = await this.getUserFromToken(meta.user.sub);
+      const user = await this.getUserFromToken(meta.user.sub, metadata);
 
       /// 2) 상품 정보 가져오기
-      const products = await this.getProductsByIds(productIds);
+      const products = await this.getProductsByIds(productIds, metadata);
 
       /// 3) 총 금액 계산하기
       const totalAmount = this.calculateTotalAmount(products);
@@ -75,7 +76,7 @@ export class OrderService implements OnModuleInit{
       const order = await this.createNewOrder(customer, products, address, payment);
       
       /// 6) 결제 시도하기 & 주문 상태 업데이트하기
-      await this.processPayment(order._id.toString(), payment, user.email);
+      await this.processPayment(order._id.toString(), payment, user.email, metadata);
 
       /// 7) 결과 반환하기
       return this.orderModel.findById(order._id);
@@ -89,7 +90,7 @@ export class OrderService implements OnModuleInit{
     return this.orderModel.findByIdAndUpdate(orderId, { status });
   }
 
-  private async getUserFromToken(userId: string) {
+  private async getUserFromToken(userId: string, metadata: Metadata) {
     /// 1) User MS : JWT 토큰 검증
     // const tResp = await lastValueFrom(this.userService.send(
     //   { cmd: 'parse_bearer_token' },
@@ -104,9 +105,9 @@ export class OrderService implements OnModuleInit{
     // const userId = tResp.data.sub;
     
     // GRPC 방식으로 연결
-    const uResp = await lastValueFrom(this.userService.getUserInfo({
-      userId,
-    }));
+    const uResp = await lastValueFrom(this.userService.getUserInfo({ userId, },
+      constructMetadata(OrderService.name, 'getUserFromToken', metadata))
+    );
 
     return uResp;
 
@@ -122,11 +123,11 @@ export class OrderService implements OnModuleInit{
     // return uResp.data;
   }
 
-  private async getProductsByIds(productIds: string[]): Promise<Product[]>{
+  private async getProductsByIds(productIds: string[], metadata: Metadata): Promise<Product[]>{
     // GRPC 방식으로 연결
     const reps = await lastValueFrom(this.productService.getProductsInfo({
       productIds,
-    }));
+    }, constructMetadata(OrderService.name, 'getProductsByIds', metadata)));
 
     return reps.products.map((product) => ({
       productId: product.id,
@@ -178,14 +179,14 @@ export class OrderService implements OnModuleInit{
     })
   }
 
-  private async processPayment(orderId: string, payment: PaymentDto, userEmail: string){
+  private async processPayment(orderId: string, payment: PaymentDto, userEmail: string, metadata: Metadata){
     try {
       // GRPC 방식으로 연결
       const resp = await lastValueFrom(this.paymentService.makePayment({
         ...payment,
         userEmail,
         orderId,
-      }));
+      }, constructMetadata(OrderService.name, 'processPayment', metadata)));
 
       const isPaid = resp.paymentStatus === 'Approved';
 
