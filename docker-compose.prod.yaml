@@ -1,0 +1,36 @@
+version: '3.1'
+services:
+  gateway:
+    image: healthy11250/fc-nestjs-gateway
+    env_file:
+      - ./apps/gateway/prod.env
+    ports:
+      - '3000:3000'
+  user:
+    image: healthy11250/fc-nestjs-user
+    env_file:
+      - ./apps/user/prod.env
+  product:
+    image: healthy11250/fc-nestjs-product
+    env_file:
+      - ./apps/product/prod.env
+  order:
+    image: healthy11250/fc-nestjs-order
+    env_file:
+      - ./apps/order/prod.env
+  payment:
+    image: healthy11250/fc-nestjs-payment
+    env_file:
+      - ./apps/payment/prod.env
+  notification:
+    image: healthy11250/fc-nestjs-notification
+    env_file:
+      - ./apps/notification/prod.env
+
+  # redis:
+  #   image: redis:7
+
+  # rabbitmq:
+  #   image: rabbitmq:4
+
+  
